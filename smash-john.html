@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smash John</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .game-title {
+            font-size: 3em;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            margin-bottom: 15px;
+            animation: titleGlow 2s ease-in-out infinite alternate;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #ffeb3b;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            margin-bottom: 10px;
+            animation: subtitleBounce 3s ease-in-out infinite;
+        }
+
+        @keyframes subtitleBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-5px) rotate(1deg); }
+            75% { transform: translateY(-3px) rotate(-1deg); }
+        }
+
+        @keyframes titleGlow {
+            from { text-shadow: 3px 3px 6px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.3); }
+            to { text-shadow: 3px 3px 6px rgba(0,0,0,0.5), 0 0 30px rgba(255,255,255,0.6); }
+        }
+
+        .score-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .score-display, .combo-counter {
+            font-size: 1.5em;
+            background: rgba(255,255,255,0.15);
+            padding: 12px 25px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .game-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .target-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .target-image {
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            border: 8px solid #fff;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            object-fit: cover;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 1.2em;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .target-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            animation: shine 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            50% { transform: translateX(100%) rotate(45deg); }
+            100% { transform: translateX(-100%) rotate(45deg); }
+        }
+
+        .target-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .target-image:active {
+            transform: scale(0.9);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+        }
+
+        .smash-effect {
+            animation: smashBurst 0.4s ease-out;
+        }
+
+        @keyframes smashBurst {
+            0% { transform: scale(1) rotate(0deg); filter: brightness(1) hue-rotate(0deg); }
+            10% { transform: scale(1.3) rotate(10deg); filter: brightness(3) hue-rotate(90deg) saturate(2); }
+            25% { transform: scale(0.8) rotate(-8deg); filter: brightness(2) hue-rotate(180deg) saturate(3); }
+            40% { transform: scale(1.2) rotate(5deg); filter: brightness(2.5) hue-rotate(270deg) saturate(2.5); }
+            60% { transform: scale(0.9) rotate(-3deg); filter: brightness(1.8) hue-rotate(360deg) saturate(2); }
+            80% { transform: scale(1.1) rotate(2deg); filter: brightness(1.5) hue-rotate(45deg) saturate(1.5); }
+            100% { transform: scale(1) rotate(0deg); filter: brightness(1) hue-rotate(0deg); }
+        }
+
+        .mega-smash {
+            animation: megaSmash 0.6s ease-out;
+        }
+
+        @keyframes megaSmash {
+            0% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+            20% { transform: scale(1.5) rotate(20deg); filter: brightness(5) hue-rotate(180deg) saturate(5) contrast(2); }
+            40% { transform: scale(0.6) rotate(-15deg); filter: brightness(3) hue-rotate(360deg) saturate(4) contrast(1.5); }
+            60% { transform: scale(1.3) rotate(10deg); filter: brightness(4) hue-rotate(90deg) saturate(3) contrast(2); }
+            80% { transform: scale(0.8) rotate(-5deg); filter: brightness(2) hue-rotate(270deg) saturate(2) contrast(1.2); }
+            100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+        }
+
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            animation: particleFly 0.8s ease-out forwards;
+        }
+
+        @keyframes particleFly {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.2) translate(var(--tx), var(--ty));
+            }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ff5252);
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background: linear-gradient(45deg, #ff5252, #f44336);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255,107,107,0.4);
+        }
+
+        .mute-btn {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .mute-btn:hover {
+            background: linear-gradient(45deg, #44a08d, #3d8b85);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(78,205,196,0.4);
+        }
+
+        .mute-btn.muted {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+
+        .combo-display {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffeb3b;
+            font-size: 2em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1001;
+        }
+
+        .combo-show {
+            animation: comboPopup 1.2s ease-out;
+        }
+
+        @keyframes comboPopup {
+            0% { opacity: 0; transform: translateX(-50%) translateY(0) scale(0.5); }
+            20% { opacity: 1; transform: translateX(-50%) translateY(-20px) scale(1.2); }
+            40% { transform: translateX(-50%) translateY(-30px) scale(1); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-50px) scale(0.8); }
+        }
+
+        .instructions {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            margin-top: 20px;
+            font-size: 1.1em;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .high-score {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .damage-text {
+            position: absolute;
+            color: #ff4444;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 1002;
+            animation: damageFloat 1s ease-out forwards;
+        }
+
+        @keyframes damageFloat {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(1.2); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10% { transform: translateX(-10px) rotate(1deg); }
+            20% { transform: translateX(10px) rotate(-1deg); }
+            30% { transform: translateX(-8px) rotate(1deg); }
+            40% { transform: translateX(8px) rotate(-1deg); }
+            50% { transform: translateX(-6px) rotate(1deg); }
+            60% { transform: translateX(6px) rotate(-1deg); }
+            70% { transform: translateX(-4px) rotate(1deg); }
+            80% { transform: translateX(4px) rotate(-1deg); }
+            90% { transform: translateX(-2px) rotate(1deg); }
+        }
+
+        .rainbow-text {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57, #ff9ff3);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbowFlow 2s ease-in-out infinite;
+        }
+
+        @keyframes rainbowFlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-header">
+        <h1 class="game-title"> SMASH JOHN W RICH KID 🤡 </h1>
+        <div class="score-container">
+            <div class="score-display">
+                Score: <span id="score">0</span>
+                <div style="font-size: 0.7em; margin-top: 5px;">
+                    Best: <span id="highScore" class="high-score">0</span>
+                </div>
+            </div>
+            <div class="combo-counter">
+                Combo: <span id="combo">0</span>x
+                <div style="font-size: 0.7em; margin-top: 5px;">
+                    Max: <span id="maxCombo" class="high-score">0</span>x
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <div class="target-container">
+            <img id="targetImage" class="target-image" src="C:\Users\zali3\OneDrive\Desktop\eco\john.jpg" alt="Tap to Smash!" 
+                 onerror="this.style.display='flex'; this.innerHTML='🖼️<br>Add Image Path<br>Above';">
+            <div id="comboDisplay" class="combo-display"></div>
+        </div>
+
+        <div class="controls">
+            <button id="resetBtn" class="btn reset-btn">🔄 Reset Game</button>
+            <button id="muteBtn" class="btn mute-btn">🔊 Sound ON</button>
+        </div>
+
+         <div style="margin-top: 15px; color: rgba(255,255,255,0.7); font-size: 0.9em;">
+            Made by <a href="https://twitter.com/zahidforai" style="color: #feca57; text-decoration: none;">Zahid</a> ⚡
+        </div>
+
+    <script>
+        class TapSmashGame {
+            constructor() {
+                this.score = 0;
+                this.combo = 0;
+                this.maxCombo = 0;
+                this.highScore = localStorage.getItem('smashHighScore') || 0;
+                this.isMuted = false;
+                this.comboTimeout = null;
+                this.lastTapTime = 0;
+                this.comboTimeWindow = 1500; // 1.5 seconds to maintain combo
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.updateDisplay();
+                this.createAudioContext();
+            }
+
+            initializeElements() {
+                this.targetImage = document.getElementById('targetImage');
+                this.scoreElement = document.getElementById('score');
+                this.comboElement = document.getElementById('combo');
+                this.maxComboElement = document.getElementById('maxCombo');
+                this.highScoreElement = document.getElementById('highScore');
+                this.comboDisplay = document.getElementById('comboDisplay');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.muteBtn = document.getElementById('muteBtn');
+                
+                this.highScoreElement.textContent = this.highScore;
+            }
+
+            createAudioContext() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Audio context not supported');
+                    this.audioContext = null;
+                }
+            }
+
+            playSound(frequency, duration, type = 'sine', volume = 0.3) {
+                if (this.isMuted || !this.audioContext) return;
+                
+                try {
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                    oscillator.type = type;
+                    
+                    gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + 0.01);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+                    
+                    oscillator.start(this.audioContext.currentTime);
+                    oscillator.stop(this.audioContext.currentTime + duration);
+                } catch (e) {
+                    console.log('Error playing sound:', e);
+                }
+            }
+
+            bindEvents() {
+                this.targetImage.addEventListener('click', (e) => this.handleTap(e));
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+                this.muteBtn.addEventListener('click', () => this.toggleMute());
+                
+                // Prevent context menu on right click
+                this.targetImage.addEventListener('contextmenu', (e) => e.preventDefault());
+                
+                // Handle touch events for mobile
+                this.targetImage.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.handleTap(e.touches[0]);
+                });
+            }
+
+            handleTap(e) {
+                const currentTime = Date.now();
+                const timeSinceLastTap = currentTime - this.lastTapTime;
+                
+                // Update combo logic
+                if (timeSinceLastTap < this.comboTimeWindow && this.lastTapTime > 0) {
+                    this.combo++;
+                } else {
+                    this.combo = 1;
+                }
+                
+                this.lastTapTime = currentTime;
+                
+                // Clear existing combo timeout
+                if (this.comboTimeout) {
+                    clearTimeout(this.comboTimeout);
+                }
+                
+                // Set new combo timeout
+                this.comboTimeout = setTimeout(() => {
+                    this.combo = 0;
+                    this.updateDisplay();
+                }, this.comboTimeWindow);
+                
+                // Update max combo
+                if (this.combo > this.maxCombo) {
+                    this.maxCombo = this.combo;
+                }
+                
+                // Calculate score with combo multiplier
+                const basePoints = 10;
+                const comboMultiplier = Math.floor(this.combo / 5) + 1;
+                const points = basePoints * comboMultiplier;
+                this.score += points;
+                
+                // Update high score
+                if (this.score > this.highScore) {
+                    this.highScore = this.score;
+                    localStorage.setItem('smashHighScore', this.highScore);
+                }
+                
+                // Visual and audio effects
+                this.addSmashEffect();
+                this.createParticles(e.clientX || e.pageX, e.clientY || e.pageY);
+                this.showComboText();
+                this.showDamageText(points, e.clientX || e.pageX, e.clientY || e.pageY);
+                this.playTapSound();
+                
+                this.updateDisplay();
+            }
+
+            playTapSound() {
+                const currentTime = this.audioContext ? this.audioContext.currentTime : 0;
+                
+                if (this.combo === 1) {
+                    this.playSound(440, 0.1, 'sine', 0.3);
+                } else if (this.combo < 5) {
+                    this.playSound(440 + (this.combo * 50), 0.15, 'triangle', 0.4);
+                    // Add a "boing" effect
+                    setTimeout(() => this.playSound(220, 0.05, 'square', 0.2), 50);
+                } else if (this.combo < 10) {
+                    this.playSound(660 + (this.combo * 30), 0.2, 'square', 0.5);
+                    // Add explosion effect
+                    setTimeout(() => this.playSound(100, 0.1, 'sawtooth', 0.3), 30);
+                    setTimeout(() => this.playSound(200, 0.08, 'sine', 0.2), 60);
+                } else if (this.combo < 20) {
+                    // Epic combo sound with multiple tones
+                    this.playSound(880 + (this.combo * 20), 0.25, 'sawtooth', 0.6);
+                    setTimeout(() => this.playSound(1200, 0.15, 'triangle', 0.4), 50);
+                    setTimeout(() => this.playSound(600, 0.1, 'square', 0.3), 100);
+                } else {
+                    // LEGENDARY COMBO - Multiple overlapping sounds
+                    this.playSound(1000 + (this.combo * 15), 0.3, 'sawtooth', 0.7);
+                    setTimeout(() => this.playSound(1500, 0.2, 'triangle', 0.5), 30);
+                    setTimeout(() => this.playSound(800, 0.15, 'sine', 0.4), 60);
+                    setTimeout(() => this.playSound(400, 0.1, 'square', 0.3), 90);
+                    setTimeout(() => this.playSound(1200, 0.12, 'triangle', 0.4), 120);
+                }
+            }
+
+            addSmashEffect() {
+                this.targetImage.classList.remove('smash-effect', 'mega-smash');
+                // Force reflow
+                this.targetImage.offsetHeight;
+                
+                if (this.combo >= 10) {
+                    this.targetImage.classList.add('mega-smash');
+                    // Screen shake effect
+                    document.body.style.animation = 'shake 0.5s ease-in-out';
+                    setTimeout(() => {
+                        document.body.style.animation = '';
+                    }, 500);
+                } else {
+                    this.targetImage.classList.add('smash-effect');
+                }
+                
+                setTimeout(() => {
+                    this.targetImage.classList.remove('smash-effect', 'mega-smash');
+                }, this.combo >= 10 ? 600 : 400);
+            }
+
+            createParticles(x, y) {
+                const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#ff4757', '#5352ed'];
+                const particleCount = Math.min(this.combo + 5, 25);
+                const emojis = ['💥', '⭐', '✨', '💫', '🔥', '💀', '😵', '🌟', '💣', '⚡'];
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    
+                    // Mix of emoji and colored particles
+                    if (Math.random() < 0.3 && this.combo >= 5) {
+                        particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                        particle.style.background = 'none';
+                        particle.style.width = '20px';
+                        particle.style.height = '20px';
+                        particle.style.fontSize = '16px';
+                        particle.style.display = 'flex';
+                        particle.style.alignItems = 'center';
+                        particle.style.justifyContent = 'center';
+                    } else {
+                        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        particle.style.width = (8 + Math.random() * 8) + 'px';
+                        particle.style.height = particle.style.width;
+                    }
+                    
+                    particle.style.left = x + 'px';
+                    particle.style.top = y + 'px';
+                    
+                    const angle = (Math.PI * 2 * i) / particleCount + (Math.random() * 0.5);
+                    const distance = 120 + Math.random() * 150;
+                    const tx = Math.cos(angle) * distance;
+                    const ty = Math.sin(angle) * distance;
+                    
+                    particle.style.setProperty('--tx', tx + 'px');
+                    particle.style.setProperty('--ty', ty + 'px');
+                    
+                    document.body.appendChild(particle);
+                    
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, 800);
+                }
+            }
+
+            showComboText() {
+                if (this.combo < 3) return;
+                
+                let text = '';
+                let emoji = '';
+                if (this.combo < 5) {
+                    text = `OUCH! x${this.combo}`;
+                    emoji = '😵';
+                } else if (this.combo < 10) {
+                    text = `JOHN IS CRYING! x${this.combo}`;
+                    emoji = '😭';
+                } else if (this.combo < 15) {
+                    text = `JOHN IS DESTROYED! x${this.combo}`;
+                    emoji = '💀';
+                } else if (this.combo < 25) {
+                    text = `ABSOLUTELY DEMOLISHED! x${this.combo}`;
+                    emoji = '🔥';
+                } else if (this.combo < 35) {
+                    text = `JOHN.EXE HAS STOPPED! x${this.combo}`;
+                    emoji = '💻';
+                } else {
+                    text = `JOHN IS IN ANOTHER DIMENSION! x${this.combo}`;
+                    emoji = '🌌';
+                }
+                
+                this.comboDisplay.innerHTML = `${emoji} ${text} ${emoji}`;
+                this.comboDisplay.classList.remove('combo-show');
+                // Force reflow
+                this.comboDisplay.offsetHeight;
+                this.comboDisplay.classList.add('combo-show');
+            }
+
+            showDamageText(points, x, y) {
+                const damageTexts = [
+                    '💥 BONK!', '🔨 SMASH!', '💀 RIP JOHN!', '😵 KNOCKED OUT!', 
+                    '🌟 CRITICAL HIT!', '⚡ ZAP!', '🎯 BULLSEYE!', '🚀 OBLITERATED!',
+                    '💣 BOOM!', '🔥 BURNED!', '❄️ FROZEN!', '⭐ STELLAR!',
+                    '🎪 SPECTACULAR!', '🎭 DRAMATIC!', '🎨 ARTISTIC!', '🎵 MUSICAL!'
+                ];
+                
+                const damageText = document.createElement('div');
+                damageText.className = 'damage-text rainbow-text';
+                
+                if (this.combo >= 20) {
+                    damageText.textContent = `${damageTexts[Math.floor(Math.random() * damageTexts.length)]} +${points}`;
+                    damageText.style.fontSize = '2em';
+                } else if (this.combo >= 10) {
+                    damageText.textContent = `${damageTexts[Math.floor(Math.random() * 8)]} +${points}`;
+                    damageText.style.fontSize = '1.8em';
+                } else {
+                    damageText.textContent = `+${points}`;
+                }
+                
+                damageText.style.left = (x + Math.random() * 60 - 30) + 'px';
+                damageText.style.top = (y + Math.random() * 40 - 20) + 'px';
+                
+                document.body.appendChild(damageText);
+                
+                setTimeout(() => {
+                    if (damageText.parentNode) {
+                        damageText.parentNode.removeChild(damageText);
+                    }
+                }, 1000);
+            }
+
+            updateDisplay() {
+                this.scoreElement.textContent = this.score;
+                this.comboElement.textContent = this.combo;
+                this.maxComboElement.textContent = this.maxCombo;
+                this.highScoreElement.textContent = this.highScore;
+            }
+
+            resetGame() {
+                this.score = 0;
+                this.combo = 0;
+                this.maxCombo = 0;
+                this.lastTapTime = 0;
+                
+                if (this.comboTimeout) {
+                    clearTimeout(this.comboTimeout);
+                }
+                
+                this.updateDisplay();
+                this.playSound(200, 0.3, 'triangle', 0.4);
+            }
+
+            toggleMute() {
+                this.isMuted = !this.isMuted;
+                this.muteBtn.textContent = this.isMuted ? '🔇 Sound OFF' : '🔊 Sound ON';
+                this.muteBtn.classList.toggle('muted', this.isMuted);
+            }
+        }
+
+        // Initialize game when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.game = new TapSmashGame();
+        });
+
+        // Handle audio context resume for mobile browsers
+        document.addEventListener('touchstart', () => {
+            if (window.game && window.game.audioContext && window.game.audioContext.state === 'suspended') {
+                window.game.audioContext.resume();
+            }
+        }, { once: true });
+    </script>
+</body>
+</html>
